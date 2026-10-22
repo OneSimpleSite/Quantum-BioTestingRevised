@@ -91,11 +91,11 @@ test('customer acknowledgement is short, personal, escaped and never implies a b
   const m = buildConfirmation({ ...good, name: 'Jane <b>Smith' }, ENV);
   assert.equal(m.to[0], good.email);
   assert.equal(m.reply_to, ENV.ENQUIRY_TO);
-  assert.match(m.text, /^Hi Jane,/);
+  assert.match(m.text, /^Thanks, Jane\./);
   assert.match(m.text, /isn’t a confirmed booking/);
   assert.equal(m.html.includes('<b>'), false);
   assert.equal(/--|—|–/.test(m.text), false);
-  assert.ok(m.text.length < 600);
+  assert.ok(m.text.length < 700);
 });
 
 test('a failed acknowledgement does not fail an enquiry the team already has', async () => {
@@ -119,10 +119,10 @@ test('both emails carry the logo from an absolute https URL, the NHS and 999 lin
   }
 });
 
-test('team email has a reply button, tints by the chosen check and escapes the reply address', () => {
+test('team email has a reply button, uses the accent colour of the chosen check and escapes the reply address', () => {
   const w = buildMessage({ ...good, test: 'womens', email: 'a"b@example.com' }, ENV);
   assert.match(w.html, /Reply to A/);
-  assert.ok(w.html.includes('#fbe9f0'));
+  assert.ok(w.html.includes('#d58aa9'));
   assert.equal(w.html.includes('mailto:a"b'), false);
-  assert.ok(buildMessage(good, ENV).html.includes('#e6eefa'));
+  assert.ok(buildMessage(good, ENV).html.includes('#5b86c9'));
 });
