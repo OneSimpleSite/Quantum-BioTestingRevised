@@ -108,3 +108,21 @@ test('a failed acknowledgement does not fail an enquiry the team already has', a
   assert.equal(res.statusCode, 200);
   assert.equal(n, 2);
 });
+
+test('both emails carry the logo from an absolute https URL, the NHS and 999 line, and a plain text version', () => {
+  const env = { ...ENV, PUBLIC_SITE_URL: 'https://example.test/' };
+  for (const m of [buildMessage(good, env), buildConfirmation(good, env)]) {
+    assert.match(m.html, /<img src="https:\/\/example\.test\/brand\/email-logo\.png"[^>]*alt="Quantum BioTesting"/);
+    assert.match(m.html, /not a substitute for NHS services\. In a medical emergency, call 999\./);
+    assert.ok(m.text.length > 100);
+    assert.equal(/<[a-z]/i.test(m.text), false);
+  }
+});
+
+test('team email has a reply button, tints by the chosen check and escapes the reply address', () => {
+  const w = buildMessage({ ...good, test: 'womens', email: 'a"b@example.com' }, ENV);
+  assert.match(w.html, /Reply to A/);
+  assert.ok(w.html.includes('#fbe9f0'));
+  assert.equal(w.html.includes('mailto:a"b'), false);
+  assert.ok(buildMessage(good, ENV).html.includes('#e6eefa'));
+});
