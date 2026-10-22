@@ -5,13 +5,13 @@
 // If any is missing the function answers 503. It never reports success without the
 // provider accepting the message. No date of birth is accepted or forwarded.
 
-const TESTS = { mens: 'Men’s Health Check', womens: 'Women’s Health Check' };
+import { TESTS, teamEmail, confirmationEmail } from './_email.js';
+
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MAX_BODY = 8 * 1024;
 
 const clean = (v, max) => (typeof v === 'string' ? v.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f]/g, '').trim().slice(0, max) : '');
 const oneLine = (v) => v.replace(/[\r\n]+/g, ' ');
-const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
 
 export function validate(input) {
   const b = input && typeof input === 'object' ? input : {};
@@ -37,42 +37,29 @@ export function validate(input) {
   return { data, fields };
 }
 
-const row = (k, v) => `<tr><td style="padding:6px 16px 6px 0;color:#4b5870;vertical-align:top">${esc(k)}</td><td style="padding:6px 0;color:#0f1d36">${esc(String(v))}</td></tr>`;
-const shell = (inner) => `<div style="font-family:Arial,Helvetica,sans-serif;font-size:16px;line-height:1.55;color:#0f1d36;max-width:34rem">${inner}</div>`;
-
-// Email to the team: everything needed to reply, nothing else.
+// Email to the team: everything needed to reply, nothing else. Layout lives in _email.js.
 export function buildMessage(d, env) {
-  const test = TESTS[d.test];
-  const rows = [
-    ['Check', test], ['Name', d.name], ['Email', d.email], ['Phone', d.phone],
-    ['Clinic or area', d.clinic || 'Not given'],
-    ['Preferred date', d.date ? `${d.date} (a request, not confirmed)` : 'Not given'],
-    ['Notes', d.notes || 'None'],
-  ];
+  const { html, text } = teamEmail(d, env);
   return {
     from: env.ENQUIRY_FROM,
     to: [env.ENQUIRY_TO],
     reply_to: d.email,
-    subject: oneLine(`New enquiry: ${test}, ${d.name}`),
-    text: `A new appointment enquiry has come in from the website.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nReply to this email to reach ${d.name}. It is not a confirmed booking until you confirm the clinic and time.\n`,
-    html: shell(`<p>A new appointment enquiry has come in from the website.</p><table cellpadding="0" cellspacing="0" style="border-collapse:collapse">${rows.map(([k, v]) => row(k, v)).join('')}</table><p style="color:#4b5870">Reply to this email to reach ${esc(d.name)}. It is not a confirmed booking until you confirm the clinic and time.</p>`),
+    subject: oneLine(`New enquiry: ${TESTS[d.test]}, ${d.name}`),
+    text,
+    html,
   };
 }
 
 // Short acknowledgement to the customer. It confirms receipt only and never implies a booking.
 export function buildConfirmation(d, env) {
-  const test = TESTS[d.test];
-  const first = oneLine(d.name.split(/\s+/)[0] || d.name);
-  const lines = [`Check: ${test}`];
-  if (d.clinic) lines.push(`Clinic or area: ${d.clinic}`);
-  if (d.date) lines.push(`Preferred date: ${d.date}`);
+  const { html, text } = confirmationEmail(d, env);
   return {
     from: env.ENQUIRY_FROM,
     to: [d.email],
     reply_to: env.ENQUIRY_TO,
     subject: 'We’ve received your enquiry',
-    text: `Hi ${first},\n\nThanks for getting in touch about the ${test}. We’ve got your enquiry and will email you again soon to confirm your clinic and appointment time.\n\n${lines.join('\n')}\n\nThis isn’t a confirmed booking yet. If you need to change anything, just reply to this email.\n\nQuantum BioTesting\n`,
-    html: shell(`<p>Hi ${esc(first)},</p><p>Thanks for getting in touch about the ${esc(test)}. We’ve got your enquiry and will email you again soon to confirm your clinic and appointment time.</p><p style="margin:0 0 1em;padding:12px 16px;background:#f6e5e0;border-radius:8px">${lines.map(esc).join('<br>')}</p><p>This isn’t a confirmed booking yet. If you need to change anything, just reply to this email.</p><p>Quantum BioTesting</p>`),
+    text,
+    html,
   };
 }
 
