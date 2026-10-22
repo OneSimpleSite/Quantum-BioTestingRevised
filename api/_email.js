@@ -23,38 +23,33 @@ export const niceDate = (iso) => {
   return d.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
 };
 
-// Outer frame: preheader, logo, white card, footer. `inner` is already-escaped HTML.
-function frame({ env, preheader, inner }) {
+// Outer frame: preheader, accent bar, logo, content, quiet footer. `inner` is already-escaped HTML.
+// Deliberately plain: one column on white, hairline rules, no cards or badges.
+function frame({ env, preheader, inner, accent = C.blue }) {
   const base = siteUrl(env);
   return `<!doctype html>
 <html lang="en-GB"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light"><meta name="supported-color-schemes" content="light"><title>Quantum BioTesting</title></head>
-<body style="margin:0;padding:0;background:${C.paper};-webkit-text-size-adjust:100%">
-<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:${C.paper}">${esc(preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:${C.paper}"><tr><td align="center" style="padding:28px 12px">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px">
-    <tr><td style="padding:0 4px 18px"><a href="${base}/" style="text-decoration:none"><img src="${base}/brand/email-logo.png" width="220" alt="Quantum BioTesting" style="display:block;border:0;outline:none;height:auto;width:220px;max-width:70%"></a></td></tr>
-    <tr><td style="background:#ffffff;border:1px solid ${C.line};border-top:4px solid ${C.blue};border-radius:14px;padding:32px 30px;font-family:${FONT};font-size:16px;line-height:1.6;color:${C.ink}">${inner}</td></tr>
-    <tr><td style="padding:22px 8px 0;font-family:${FONT};font-size:12.5px;line-height:1.6;color:${C.muted}">
-      <p style="margin:0 0 8px">${esc(DISCLAIMER)}</p>
-      <p style="margin:0">Quantum BioTesting Ltd. Registered in England &amp; Wales.<br><a href="${base}/privacy/" style="color:${C.muted}">Privacy Policy</a> &nbsp;·&nbsp; <a href="${base}/" style="color:${C.muted}">Website</a></p>
-    </td></tr>
+<body style="margin:0;padding:0;background:#ffffff;-webkit-text-size-adjust:100%">
+<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:#ffffff">${esc(preheader)}&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;&nbsp;&zwnj;</div>
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#ffffff"><tr><td style="height:5px;line-height:5px;font-size:0;background:${accent}">&nbsp;</td></tr><tr><td align="center" style="padding:36px 24px 40px">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="max-width:540px">
+    <tr><td style="padding:0 0 34px"><a href="${base}/" style="text-decoration:none"><img src="${base}/brand/email-logo.png" width="190" alt="Quantum BioTesting" style="display:block;border:0;outline:none;height:auto;width:190px;max-width:60%"></a></td></tr>
+    <tr><td style="font-family:${FONT};font-size:16px;line-height:1.65;color:${C.ink}">${inner}</td></tr>
+    <tr><td style="padding:36px 0 0"><table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td style="border-top:1px solid ${C.line};padding:18px 0 0;font-family:${FONT};font-size:12.5px;line-height:1.65;color:${C.muted}">
+      <p style="margin:0 0 6px">${esc(DISCLAIMER)}</p>
+      <p style="margin:0">Quantum BioTesting Ltd, registered in England &amp; Wales. <a href="${base}/privacy/" style="color:${C.muted}">Privacy Policy</a></p>
+    </td></tr></table></td></tr>
   </table>
 </td></tr></table></body></html>`;
 }
 
-const h1 = (t) => `<h1 style="margin:0 0 14px;font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:26px;line-height:1.2;color:${C.blue}">${esc(t)}</h1>`;
-const p = (t, extra = '') => `<p style="margin:0 0 16px;${extra}">${t}</p>`;
+const h1 = (t) => `<h1 style="margin:0 0 18px;font-family:Georgia,'Times New Roman',serif;font-weight:600;font-size:30px;line-height:1.15;color:${C.blue}">${esc(t)}</h1>`;
+const p = (t, extra = '') => `<p style="margin:0 0 18px;${extra}">${t}</p>`;
 
-// Tinted card in the colour of the chosen check: blue for men's, pink for women's.
-function summaryCard(testKey, rows) {
-  const t = TONE[testKey] || TONE.mens;
-  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 22px;background:${t.bg};border:1.5px solid ${t.line};border-radius:12px"><tr><td style="padding:16px 20px">
-    <p style="margin:0 0 8px;font-family:${FONT};font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:700;color:${t.ink}">Your enquiry</p>
-    ${rows.map(([k, v]) => `<p style="margin:0 0 4px;font-size:15px"><span style="color:${C.muted}">${esc(k)}:</span> <strong style="color:${C.ink}">${esc(v)}</strong></p>`).join('')}
-  </td></tr></table>`;
+// Label and value pairs separated by hairlines. No box, no tint.
+function details(rows) {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:6px 0 26px">${rows.map(([k, v]) => `<tr><td valign="top" width="132" style="padding:11px 12px 11px 0;border-top:1px solid ${C.line};font-size:13px;color:${C.muted}">${esc(k)}</td><td valign="top" style="padding:11px 0;border-top:1px solid ${C.line};font-size:15px;color:${C.ink}">${esc(v)}</td></tr>`).join('')}<tr><td colspan="2" style="border-top:1px solid ${C.line};font-size:0;line-height:0">&nbsp;</td></tr></table>`;
 }
-
-const button = (href, label, colour = C.red) => `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:6px 0 4px"><tr><td style="border:2px solid ${colour};border-radius:999px"><a href="${esc(href)}" style="display:inline-block;padding:13px 28px;font-family:${FONT};font-size:16px;font-weight:700;color:${colour};text-decoration:none">${esc(label)}</a></td></tr></table>`;
 
 // Customer: short acknowledgement. Confirms receipt, never implies a booking.
 export function confirmationEmail(d, env) {
@@ -63,24 +58,19 @@ export function confirmationEmail(d, env) {
   const rows = [['Check', test]];
   if (d.clinic) rows.push(['Clinic or area', d.clinic]);
   if (d.date) rows.push(['Preferred date', niceDate(d.date)]);
-  const next = [
-    'We email you to confirm your clinic and appointment time.',
-    'Your appointment is confirmed once you have that email.',
-  ];
-  const base = siteUrl(env);
+  const accent = (TONE[d.test] || TONE.mens).line;
   const html = frame({
     env,
-    preheader: 'Thanks for your enquiry. We will email you again to confirm your clinic and time.',
+    accent,
+    preheader: 'We’ll be in touch by email to confirm your clinic and appointment time.',
     inner:
-      h1(`Hi ${first}, we’ve got your enquiry`) +
-      p(`Thanks for getting in touch about the ${esc(test)}. We will email you again soon to confirm your clinic and appointment time.`) +
-      summaryCard(d.test, rows) +
-      `<p style="margin:0 0 8px;font-weight:700;color:${C.blue}">What happens next</p>` +
-      `<table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 20px">${next.map((s, i) => `<tr><td valign="top" style="padding:0 12px 8px 0"><table role="presentation" cellpadding="0" cellspacing="0"><tr><td align="center" width="26" height="26" style="width:26px;height:26px;border:2px solid ${C.blue};border-radius:13px;font-family:${FONT};font-size:13px;font-weight:700;color:${C.blue}">${i + 1}</td></tr></table></td><td style="padding:0 0 8px;font-size:15px">${esc(s)}</td></tr>`).join('')}</table>` +
-      p('This isn’t a confirmed booking yet. If you need to change anything, just reply to this email.') +
-      `<p style="margin:0;font-size:14px;color:${C.muted}">Want to know what to expect? Read <a href="${base}/how-it-works/" style="color:${C.blue};font-weight:700">how it works</a>.</p>`,
+      h1(`Thanks, ${first}.`) +
+      p(`We’ve received your enquiry about the ${esc(test)}. We’ll be in touch by email to confirm your clinic and appointment time.`) +
+      details(rows) +
+      p('This isn’t a confirmed booking yet. If anything needs changing, just reply to this email.') +
+      `<p style="margin:26px 0 0">Kind regards,<br><strong>Quantum BioTesting</strong></p>`,
   });
-  const text = `Hi ${first},\n\nThanks for getting in touch about the ${test}. We’ve got your enquiry and will email you again soon to confirm your clinic and appointment time.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nWhat happens next\n${next.map((s, i) => `${i + 1}. ${s}`).join('\n')}\n\nThis isn’t a confirmed booking yet. If you need to change anything, just reply to this email.\n\nQuantum BioTesting\n${DISCLAIMER}\n`;
+  const text = `Thanks, ${first}.\n\nWe’ve received your enquiry about the ${test}. We’ll be in touch by email to confirm your clinic and appointment time.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nThis isn’t a confirmed booking yet. If anything needs changing, just reply to this email.\n\nKind regards,\nQuantum BioTesting\n\n${DISCLAIMER}\n`;
   return { html, text };
 }
 
@@ -93,17 +83,19 @@ export function teamEmail(d, env) {
     ['Preferred date', d.date ? `${niceDate(d.date)} (a request, not confirmed)` : 'Not given'],
     ['Notes', d.notes || 'None'],
   ];
-  const t = TONE[d.test] || TONE.mens;
+  const accent = (TONE[d.test] || TONE.mens).line;
+  const first = d.name.split(/\s+/)[0] || d.name;
   const subject = encodeURIComponent(`Your ${test} enquiry`);
   const html = frame({
     env,
+    accent,
     preheader: `${d.name} would like the ${test}. Reply to this email to reach them.`,
     inner:
-      `<p style="margin:0 0 10px"><span style="display:inline-block;padding:4px 12px;border:1.5px solid ${t.line};background:${t.bg};color:${t.ink};border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase">${esc(test)}</span></p>` +
-      h1(`New enquiry from ${d.name}`) +
-      `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 20px;border-collapse:collapse">${rows.map(([k, v]) => `<tr><td valign="top" width="130" style="padding:10px 12px 10px 0;border-top:1px solid ${C.line};font-size:14px;color:${C.muted}">${esc(k)}</td><td valign="top" style="padding:10px 0;border-top:1px solid ${C.line};font-size:15px;color:${C.ink}${k === 'Notes' ? ';white-space:pre-wrap' : ''}">${esc(v)}</td></tr>`).join('')}</table>` +
-      button(`mailto:${d.email}?subject=${subject}`, `Reply to ${d.name.split(/\s+/)[0] || d.name}`) +
-      `<p style="margin:14px 0 0;font-size:14px;color:${C.muted}">You can also reply to this email to reach ${esc(d.name)}. It is not a confirmed booking until you confirm the clinic and time.</p>`,
+      `<p style="margin:0 0 6px;font-size:13px;color:${C.muted}">New website enquiry</p>` +
+      h1(d.name) +
+      details(rows) +
+      `<p style="margin:0 0 14px"><a href="mailto:${esc(d.email)}?subject=${subject}" style="color:${C.red};font-weight:700;text-decoration:underline">Reply to ${esc(first)}</a></p>` +
+      `<p style="margin:0;font-size:14px;color:${C.muted}">You can also just reply to this email. It is not a confirmed booking until you confirm the clinic and time.</p>`,
   });
   const text = `A new appointment enquiry has come in from the website.\n\n${rows.map(([k, v]) => `${k}: ${v}`).join('\n')}\n\nReply to this email to reach ${d.name}. It is not a confirmed booking until you confirm the clinic and time.\n`;
   return { html, text };
